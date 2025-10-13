@@ -31,6 +31,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import './landing-page.css';
 
+
 // EcoHealth Sentinel Logo Component
 function EcoHealthLogo() {
   return (
@@ -126,16 +127,72 @@ function EcoHealthLogo() {
   );
 }
 
+// Legal Modal Component
+function LegalModal({ isOpen, onClose, title, content }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = 'auto';
+        window.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="popup-overlay" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="legal-modal-title"
+    >
+      <div 
+        className="popup-card-large legal-modal" 
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxHeight: '80vh', overflowY: 'auto' }}
+      >
+        <button
+          className="popup-close"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        
+        <div className="popup-content">
+          <h3 id="legal-modal-title" className="popup-title">{title}</h3>
+          <div className="legal-content">{content}</div>
+          <button className="btn-primary" onClick={onClose} style={{ marginTop: '20px' }}>
+            I Understand
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   const [scrollY, setScrollY] = useState(0);
   const [activeSection, setActiveSection] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [particles, setParticles] = useState([]);
   const [showLoginOptions, setShowLoginOptions] = useState(false);
-  const [showLearnMore, setShowLearnMore] = useState(false);
   const [showSignInPopup, setShowSignInPopup] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSolution, setActiveSolution] = useState(null);
+  
+  // Legal Modals State
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showCookiePolicy, setShowCookiePolicy] = useState(false);
+  
   const navigate = useNavigate();
 
   const heroRef = useRef(null);
@@ -175,45 +232,120 @@ export default function Landing() {
     setParticles(newParticles);
   }, []);
 
-  // Close modal on ESC key and prevent body scroll
-// Close modal function
-const closeModal = () => {
-  setActiveSolution(null);
-};
+  // Close solution modal
+  const closeModal = () => {
+    setActiveSolution(null);
+  };
 
-useEffect(() => {
-  if (activeSolution) {
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+  useEffect(() => {
+    if (activeSolution) {
+      document.body.style.overflow = 'hidden';
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') closeModal();
+      };
+      window.addEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = 'auto';
+        window.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [activeSolution]);
+
+  // Smooth scroll functions
+  const scrollToSection = (ref) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Legal Content Data
+  const legalContent = {
+    privacyPolicy: (
+      <div className="legal-text">
+        <h4>Privacy Policy</h4>
+        <p><strong>Last Updated:</strong> October 12, 2025</p>
+        
+        <h5>1. Information We Collect</h5>
+        <p>We collect information you provide directly to us, including name, email address, phone number, and any other information you choose to provide through our contact forms or services.</p>
+        
+        <h5>2. How We Use Your Information</h5>
+        <ul>
+          <li>To provide, maintain, and improve our services</li>
+          <li>To communicate with you about our products and services</li>
+          <li>To monitor and analyze trends, usage, and activities</li>
+          <li>To detect, prevent, and address technical issues</li>
+        </ul>
+        
+        <h5>3. Data Security</h5>
+        <p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
+        
+        <h5>4. Your Rights</h5>
+        <p>You have the right to access, update, or delete your personal information. Contact us at riteshkumar90359@gmail.com for any privacy-related requests.</p>
+        
+        <h5>5. Contact Us</h5>
+        <p>For questions about this Privacy Policy, contact us at riteshkumar90359@gmail.com or +91 6206269895.</p>
+      </div>
+    ),
     
-    // Close on ESC key
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
-      }
-    };
+    termsOfService: (
+      <div className="legal-text">
+        <h4>Terms of Service</h4>
+        <p><strong>Last Updated:</strong> October 12, 2025</p>
+        
+        <h5>1. Acceptance of Terms</h5>
+        <p>By accessing and using EcoHealth Sentinel's services, you accept and agree to be bound by these Terms of Service.</p>
+        
+        <h5>2. Use of Services</h5>
+        <p>You agree to use our services only for lawful purposes and in accordance with these Terms. You must not:</p>
+        <ul>
+          <li>Violate any applicable laws or regulations</li>
+          <li>Infringe upon the rights of others</li>
+          <li>Transmit any harmful or malicious code</li>
+          <li>Attempt to gain unauthorized access to our systems</li>
+        </ul>
+        
+        <h5>3. Intellectual Property</h5>
+        <p>All content, features, and functionality of our services are owned by EcoHealth Sentinel and protected by international copyright, trademark, and other intellectual property laws.</p>
+        
+        <h5>4. Limitation of Liability</h5>
+        <p>EcoHealth Sentinel shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of our services.</p>
+        
+        <h5>5. Changes to Terms</h5>
+        <p>We reserve the right to modify these terms at any time. Continued use of our services constitutes acceptance of modified terms.</p>
+      </div>
+    ),
     
-    window.addEventListener('keydown', handleEscape);
-    
-    return () => {
-      // Cleanup: restore body scroll and remove event listener
-      document.body.style.overflow = 'auto';
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }
-}, [activeSolution, closeModal]); // include closeModal in deps
+    cookiePolicy: (
+      <div className="legal-text">
+        <h4>Cookie Policy</h4>
+        <p><strong>Last Updated:</strong> October 12, 2025</p>
+        
+        <h5>1. What Are Cookies</h5>
+        <p>Cookies are small text files stored on your device when you visit our website. They help us provide you with a better experience and understand how you use our services.</p>
+        
+        <h5>2. Types of Cookies We Use</h5>
+        <ul>
+          <li><strong>Essential Cookies:</strong> Required for the website to function properly</li>
+          <li><strong>Analytics Cookies:</strong> Help us understand how visitors interact with our website</li>
+          <li><strong>Preference Cookies:</strong> Remember your settings and preferences</li>
+          <li><strong>Marketing Cookies:</strong> Track your browsing habits to deliver relevant advertisements</li>
+        </ul>
+        
+        <h5>3. Managing Cookies</h5>
+        <p>You can control and/or delete cookies through your browser settings. However, disabling cookies may affect the functionality of our website.</p>
+        
+        <h5>4. Third-Party Cookies</h5>
+        <p>We may use third-party services like Google Analytics that place cookies on your device. These third parties have their own privacy policies.</p>
+        
+        <h5>5. Contact</h5>
+        <p>For questions about our use of cookies, contact us at riteshkumar90359@gmail.com.</p>
+      </div>
+    )
+  };
 
-// Smooth scroll functions
-const scrollToSection = (ref) => {
-  ref.current?.scrollIntoView({ behavior: 'smooth' });
-};
-
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-
-  // UPDATED SOLUTIONS ARRAY WITH DETAILED INFO
+  // Solutions Array
   const solutions = [
     {
       icon: <Heart className="w-8 h-8" />,
@@ -303,22 +435,21 @@ const scrollToTop = () => {
   ];
 
   const team = [
-  {
-    name: 'Ritesh Kumar',
-    role: 'Software Engineer | AI & ML Enthusiast',
-    image: '🧑‍💻',
-    linkedin: 'https://www.linkedin.com/in/ritesh-kumar-b3a654253',
-    bio: 'B.Tech CSE (AI & ML) student | Experienced in React, SQL | Passionate about AI, ML, and full-stack development'
-  },
-  {
-    name: 'Devanshu Mahato',
-    role: 'Frontend Developer | Tech Enthusiast',
-    image: '🧑‍💻',
-    linkedin: 'linkedin.com/in/devanshu-mahato-67653b294',
-    bio: 'Passionate about exploring new technologies | Skilled in Python, Java, HTML, CSS'
-  }
-];
-
+    {
+      name: 'Ritesh Kumar',
+      role: 'Software Engineer | AI & ML Enthusiast',
+      image: '🧑‍💻',
+      linkedin: 'https://www.linkedin.com/in/ritesh-kumar-b3a654253',
+      bio: 'B.Tech CSE (AI & ML) student | Experienced in React, SQL | Passionate about AI, ML, and full-stack development'
+    },
+    {
+      name: 'Devanshu',
+      role: 'Frontend Developer | Tech Enthusiast',
+      image: '🧑‍💻',
+      linkedin: 'https://www.linkedin.com/in/ruchi-kumari-0b7b64295',
+      bio: 'Passionate about exploring new technologies | Skilled in Python, Java, HTML, CSS | Member of GDG on Campus AJU'
+    }
+  ];
 
   const stats = [
     { icon: <Users />, value: '10K+', label: 'Active Users' },
@@ -664,7 +795,7 @@ const scrollToTop = () => {
               <p className="team-role">{member.role}</p>
               <p className="team-bio">{member.bio}</p>
               <div className="team-social">
-                <a href={member.linkedin} target="_blank" rel="noopener noreferrer">
+                <a href={member.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${member.name}'s LinkedIn profile`}>
                   <Linkedin className="w-5 h-5" />
                 </a>
               </div>
@@ -754,31 +885,70 @@ const scrollToTop = () => {
           <div className="footer-section">
             <EcoHealthLogo />
             <p>AI-powered solutions for a sustainable future</p>
+            <p style={{ fontSize: '0.85rem', marginTop: '10px', opacity: 0.7 }}>
+              © 2025 EcoHealth Sentinel. All rights reserved.
+            </p>
           </div>
+          
           <div className="footer-section">
             <h4>Quick Links</h4>
-            <a href="#">About Us</a>
-            <a href="#">Solutions</a>
-            <a href="#">Goals</a>
-            <a href="#">Team</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection(aboutRef); }}>About Us</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection(solutionsRef); }}>Solutions</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection(goalsRef); }}>Goals</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); scrollToSection(teamRef); }}>Team</a>
           </div>
+          
           <div className="footer-section">
             <h4>Legal</h4>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Cookie Policy</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacyPolicy(true); }}>
+              Privacy Policy
+            </a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowTermsOfService(true); }}>
+              Terms of Service
+            </a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowCookiePolicy(true); }}>
+              Cookie Policy
+            </a>
           </div>
+          
           <div className="footer-section">
-            <h4>Connect</h4>
+            <h4>Connect With Us</h4>
             <div className="social-links">
-              <Linkedin className="w-5 h-5" />
-              <Twitter className="w-5 h-5" />
-              <Github className="w-5 h-5" />
+              <a 
+                href="https://www.linkedin.com/in/ritesh-kumar-b3a654253" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Visit our LinkedIn profile"
+                className="social-icon"
+              >
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://twitter.com/ecohealth_sentinel" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Visit our Twitter profile"
+                className="social-icon"
+              >
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://github.com/ritesh-kumar-tech" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                aria-label="Visit our GitHub profile"
+                className="social-icon"
+              >
+                <Github className="w-5 h-5" />
+              </a>
             </div>
+            <p style={{ fontSize: '0.85rem', marginTop: '15px' }}>
+              Email: riteshkumar90359@gmail.com
+            </p>
+            <p style={{ fontSize: '0.85rem' }}>
+              Phone: +91 6206269895
+            </p>
           </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2025 EcoHealth Sentinel. All rights reserved.</p>
         </div>
       </footer>
 
@@ -816,7 +986,7 @@ const scrollToTop = () => {
         </div>
       )}
 
-      {/* SOLUTION DETAILS MODAL - ENHANCED & FIXED */}
+      {/* Solution Details Modal */}
       {activeSolution && (
         <div 
           className="popup-overlay" 
@@ -875,9 +1045,31 @@ const scrollToTop = () => {
               
               <div className="popup-stats-large">{activeSolution.stats}</div>
             </div>
-          </div>
+          </div> 
         </div>
       )}
+
+      {/* Legal Modals */}
+      <LegalModal 
+        isOpen={showPrivacyPolicy} 
+        onClose={() => setShowPrivacyPolicy(false)}
+        title="Privacy Policy"
+        content={legalContent.privacyPolicy}
+      />
+
+      <LegalModal 
+        isOpen={showTermsOfService} 
+        onClose={() => setShowTermsOfService(false)}
+        title="Terms of Service"
+        content={legalContent.termsOfService}
+      />
+
+      <LegalModal 
+        isOpen={showCookiePolicy} 
+        onClose={() => setShowCookiePolicy(false)}
+        title="Cookie Policy"
+        content={legalContent.cookiePolicy}
+      />
     </div>
   );
 }
