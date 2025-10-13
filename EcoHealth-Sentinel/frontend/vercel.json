@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://gateway-rho-mocha.vercel.app/api/:path*"
+    }
+  ],
+  "relatedProjects": [
+    "prj_gateway_id",
+    "prj_backend_id",
+    "prj_backend1_id"
+  ]
+}

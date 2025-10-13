@@ -1,0 +1,73 @@
+{
+  "name": "ecohealth-sentinel-gateway",
+  "version": "1.0.0",
+  "description": "API Gateway for EcoHealth-Sentinel microservices architecture",
+  "main": "gateway.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "start": "node gateway.js",
+    "dev": "nodemon gateway.js",
+    "start-all": "node start-all.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "validate": "npm run lint && npm run test",
+    "clean": "rm -rf node_modules package-lock.json",
+    "reinstall": "npm run clean && npm install"
+  },
+  "keywords": [
+    "api-gateway",
+    "microservices",
+    "nodejs",
+    "express",
+    "ecohealth",
+    "healthcare",
+    "environment",
+    "ai",
+    "ml"
+  ],
+  "author": "Ritesh Kumar <RiteshKumar2e>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RiteshKumar2e/EcoHealth-Sentinel.git"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.1.5",
+    "form-data": "^4.0.4",
+    "helmet": "^8.1.0",
+    "http-proxy-middleware": "^3.0.0",
+    "morgan": "^1.10.0",
+    "multer": "^2.0.2",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^6.3.3"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "gateway.js",
+      "start-all.js",
+      ".env"
+    ],
+    "ext": "js,json",
+    "ignore": [
+      "node_modules/**",
+      "*.test.js"
+    ],
+    "delay": "1000"
+  }
+}

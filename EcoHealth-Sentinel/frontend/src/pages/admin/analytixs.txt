@@ -1,0 +1,55 @@
+Dynamic Features:
+1. State Management with React Hooks
+
+All data stored in useState hooks
+Real-time updates trigger re-renders automatically
+Smooth transitions when data changes
+
+2. API Integration Ready
+javascript// Replace these with your actual endpoints:
+fetchMetricsFromAPI() - GET /api/metrics
+fetchDomainDataFromAPI() - GET /api/domains
+fetchTimelineFromAPI() - GET /api/timeline
+fetchImpactMetricsFromAPI() - GET /api/impact
+fetchModelPerformanceFromAPI() - GET /api/models
+3. Auto-Refresh System
+
+Refreshes all data every 30 seconds automatically
+Manual refresh button with loading state
+Last update timestamp displayed
+
+4. Chatbot Integration
+javascript// Exposed globally for external chatbot access:
+window.updateDashboard({
+  type: 'metrics',
+  data: { deployments: 1500, accuracy: 95.2 }
+});
+5. WebSocket Support (Optional)
+
+Commented WebSocket template included
+Ready for real-time streaming data
+Handles different message types
+
+6. How to Integrate:
+Backend API:
+javascript// In your backend, return JSON like:
+{
+  deployments: 1240,
+  accuracy: 91.5,
+  livesImpacted: 2.4,
+  costSavings: 18.5
+}
+Chatbot Integration:
+javascript// From your chatbot code:
+window.updateDashboard({
+  type: 'models',
+  data: [
+    { model: 'New Model', accuracy: 96, speed: 94, reliability: 97 }
+  ]
+});
+WebSocket (Real-time):
+javascript// Uncomment WebSocket code and connect:
+ws.send(JSON.stringify({ 
+  action: 'subscribe',
+  channel: 'analytics' 
+}));

@@ -1,0 +1,4 @@
+// Update these URLs with your actual backend endpoints:
+- fetchDataFromBackend() → GET /api/irrigation/status
+- toggleIrrigation() → POST /api/irrigation/toggle
+- updateIrrigationMode() → POST /api/irrigation/mode

@@ -1,0 +1,31 @@
+// Node.js/Express Backend Example
+app.get('/api/market-forecast', async (req, res) => {
+  try {
+    // Fetch from your ML model or database
+    const forecastData = {
+      tomato: {
+        current: await getCurrentPrice('tomato'),
+        forecast: await generateForecast('tomato'),
+        trend: calculateTrend('tomato'),
+        // ... other fields
+      },
+      // ... other crops
+    };
+    
+    res.json(forecastData);
+  } catch (error) {
+    res.status(500).json({ error: 'Forecast service unavailable' });
+  }
+});
+
+// Optional: WebSocket for real-time updates
+wss.on('connection', (ws) => {
+  const interval = setInterval(() => {
+    ws.send(JSON.stringify({
+      type: 'price_update',
+      data: getLatestPrices()
+    }));
+  }, 10000); // Every 10 seconds
+});
+
+###add more crops make chhosing after dispaltying 4 at least 20 crops
