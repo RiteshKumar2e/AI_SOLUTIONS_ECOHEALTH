@@ -6,7 +6,14 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getHello() {
+    // You can still use AppService if needed for future logic
+    const serviceMessage = this.appService.getHello();
+    
+    // Return a clean JSON response
+    return {
+      message: '✅ API is running successfully!',
+      serviceMessage,
+    };
   }
 }

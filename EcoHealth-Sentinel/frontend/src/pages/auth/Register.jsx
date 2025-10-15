@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { User, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Building, Phone } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Building, Phone, CheckCircle, X } from 'lucide-react';
 
 export default function Register() {
-  const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -20,6 +17,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -45,7 +43,38 @@ export default function Register() {
     return newErrors;
   };
 
-  // Success Handler: Add user to global storage + Navigate Dashboard
+  // MongoDB Save Function
+  const saveToMongoDB = async (userData) => {
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: userData.fullName,
+          email: userData.email,
+          organization: userData.organization,
+          phone: userData.phone,
+          password: userData.password,
+          role: userData.role,
+          createdAt: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('MongoDB Error:', error);
+      throw error;
+    }
+  };
+
+  // Success Handler: Add user to global storage + Show Popup
   const handleRegisterSuccess = async (userData) => {
     if (window.UserStorage) {
       window.UserStorage.addUser({
@@ -63,13 +92,17 @@ export default function Register() {
       });
     }
 
-    // Go to dashboard
-    navigate('/Users');
+    // Show success popup
+    setShowSuccessPopup(true);
+
+    // Auto-redirect after 3 seconds
+    setTimeout(() => {
+      window.location.href = '/auth/dashboard';
+    }, 3000);
   };
 
   // Submit Handler
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) { 
       setErrors(newErrors); 
@@ -77,30 +110,94 @@ export default function Register() {
     }
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Save to MongoDB
+      await saveToMongoDB(formData);
+      
       console.log('Register data:', formData);
       setIsLoading(false);
 
       // Call Success handler
       handleRegisterSuccess(formData);
-    }, 2000);
+    } catch (error) {
+      setIsLoading(false);
+      setErrors({ submit: 'Registration failed. Please try again.' });
+    }
+  };
+
+  const closePopup = () => {
+    setShowSuccessPopup(false);
+    window.location.href = '/auth/dashboard';
   };
 
   const styles = {
-    container: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: '#1e293b' },
-    card: { width: '100%', maxWidth: '800px', backgroundColor: 'rgba(30,41,59,0.8)', borderRadius: '16px', padding: '2rem', border: '1px solid #334155', backdropFilter: 'blur(8px)' },
-    label: { display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#cbd5e1' },
-    input: (hasError) => ({ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', borderRadius: '8px', border: `1px solid ${hasError ? '#f87171' : '#475569'}`, backgroundColor: 'rgba(51,65,85,0.5)', color: '#fff' }),
+    container: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' },
+    card: { width: '100%', maxWidth: '800px', backgroundColor: 'rgba(30,41,59,0.9)', borderRadius: '20px', padding: '2.5rem', border: '1px solid #334155', backdropFilter: 'blur(12px)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' },
+    label: { display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem', color: '#cbd5e1', fontWeight: '500' },
+    input: (hasError) => ({ width: '100%', padding: '0.75rem 0.75rem 0.75rem 2.5rem', borderRadius: '8px', border: `1px solid ${hasError ? '#f87171' : '#475569'}`, backgroundColor: 'rgba(51,65,85,0.5)', color: '#fff', fontSize: '0.875rem', outline: 'none', transition: 'all 0.2s' }),
     error: { display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem', color: '#f87171', fontSize: '0.75rem' },
-    button: { width: '100%', padding: '0.75rem', borderRadius: '8px', backgroundColor: '#8b5cf6', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', cursor: 'pointer' },
+    button: { width: '100%', padding: '0.875rem', borderRadius: '10px', backgroundColor: '#8b5cf6', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none', cursor: 'pointer', fontSize: '1rem', transition: 'all 0.3s' },
     checkboxLabel: { display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', color: '#cbd5e1', fontSize: '0.875rem' },
-    select: { width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #4c6947ff', backgroundColor: 'rgba(51,65,85,0.5)', color: '#fff' },
-    footer: { textAlign: 'center', marginTop: '1.5rem', color: '#cbd5e1', fontSize: '0.8rem' },
-    grid: { display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' },
+    select: { width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #475569', backgroundColor: 'rgba(51,65,85,0.5)', color: '#fff', fontSize: '0.875rem', outline: 'none' },
+    footer: { textAlign: 'center', marginTop: '1.5rem', color: '#94a3b8', fontSize: '0.8rem' },
     gridMd: { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1rem' },
     icon: { position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' },
-    passwordButton: { position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }
+    passwordButton: { position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.25rem', transition: 'all 0.2s' },
+    
+    // Popup Styles
+    popupOverlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      backdropFilter: 'blur(8px)',
+      animation: 'fadeIn 0.3s ease-out'
+    },
+    popupContent: {
+      backgroundColor: 'rgba(30,41,59,0.98)',
+      borderRadius: '24px',
+      padding: '3rem 2.5rem',
+      maxWidth: '480px',
+      width: '90%',
+      textAlign: 'center',
+      border: '1px solid #334155',
+      position: 'relative',
+      boxShadow: '0 25px 80px rgba(139, 92, 246, 0.3)',
+      animation: 'slideUp 0.4s ease-out'
+    },
+    popupClose: {
+      position: 'absolute',
+      top: '1rem',
+      right: '1rem',
+      background: 'rgba(148, 163, 184, 0.1)',
+      border: 'none',
+      color: '#94a3b8',
+      cursor: 'pointer',
+      padding: '0.5rem',
+      borderRadius: '8px',
+      transition: 'all 0.2s',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    successIcon: {
+      width: '80px',
+      height: '80px',
+      margin: '0 auto 1.5rem',
+      padding: '1.5rem',
+      backgroundColor: 'rgba(34, 197, 94, 0.2)',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      animation: 'scaleIn 0.5s ease-out'
+    }
   };
 
   return (
@@ -108,7 +205,7 @@ export default function Register() {
       <div style={styles.card}>
         {/* Logo/Brand */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'inline-block', padding: '1rem', backgroundColor: 'rgba(139,92,246,0.2)', borderRadius: '16px', marginBottom: '1rem' }}>
+          <div style={{ display: 'inline-block', padding: '1.25rem', backgroundColor: 'rgba(139,92,246,0.2)', borderRadius: '20px', marginBottom: '1rem', border: '1px solid rgba(139,92,246,0.3)' }}>
             <User style={{ width: '48px', height: '48px', color: '#c084fc' }} />
           </div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#fff', marginBottom: '0.5rem' }}>Create Your Account</h1>
@@ -116,7 +213,7 @@ export default function Register() {
         </div>
 
         {/* FORM */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Full Name & Email */}
           <div style={styles.gridMd}>
             <div>
@@ -161,7 +258,7 @@ export default function Register() {
           <div>
             <label htmlFor="role" style={styles.label}>Role</label>
             <select id="role" name="role" value={formData.role} onChange={handleChange} style={styles.select}>
-              <option value="Select Option">Select Option</option>
+              <option value="user">Select Option</option>
               <option value="healthcare">Healthcare Specialist</option>
               <option value="agriculture">Agriculture Expert</option>
               <option value="environment">Environmental Scientist</option>
@@ -200,21 +297,34 @@ export default function Register() {
           {/* Terms */}
           <div>
             <label style={styles.checkboxLabel}>
-              <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} style={{ marginTop: '0.25rem', width: '16px', height: '16px', borderRadius: '4px', border: errors.agreeToTerms ? '1px solid #f87171' : '1px solid #475569', backgroundColor: 'rgba(51,65,85,0.5)' }} />
-              <span>I agree to the <a href="#" style={{ color: '#c084fc' }}>Terms of Service</a> and <a href="#" style={{ color: '#c084fc' }}>Privacy Policy</a></span>
+              <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} style={{ marginTop: '0.25rem', width: '16px', height: '16px', borderRadius: '4px', border: errors.agreeToTerms ? '1px solid #f87171' : '1px solid #475569', backgroundColor: 'rgba(51,65,85,0.5)', cursor: 'pointer' }} />
+              <span>I agree to the <a href="#" style={{ color: '#c084fc', textDecoration: 'none' }}>Terms of Service</a> and <a href="#" style={{ color: '#c084fc', textDecoration: 'none' }}>Privacy Policy</a></span>
             </label>
             {errors.agreeToTerms && <div style={styles.error}><AlertCircle style={{ width: '12px', height: '12px' }} />{errors.agreeToTerms}</div>}
           </div>
 
+          {/* Submit Error */}
+          {errors.submit && <div style={{ ...styles.error, justifyContent: 'center', fontSize: '0.875rem' }}><AlertCircle style={{ width: '16px', height: '16px' }} />{errors.submit}</div>}
+
           {/* Submit */}
-          <button type="submit" disabled={isLoading} style={styles.button}>
-            {isLoading ? <> <div style={{ width: '20px', height: '20px', border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div> <span>Creating account...</span> </> : <> <span>Create Account</span> <ArrowRight style={{ width: '20px', height: '20px' }} /> </>}
+          <button type="button" onClick={handleSubmit} disabled={isLoading} style={{ ...styles.button, opacity: isLoading ? 0.7 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}>
+            {isLoading ? (
+              <> 
+                <div style={{ width: '20px', height: '20px', border: '2px solid #fff', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div> 
+                <span>Creating account...</span> 
+              </>
+            ) : (
+              <> 
+                <span>Create Account</span> 
+                <ArrowRight style={{ width: '20px', height: '20px' }} /> 
+              </>
+            )}
           </button>
-        </form>
+        </div>
 
         {/* Sign In */}
         <div style={{ textAlign: 'center', marginTop: '1.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-          Already have an account? <Link to="/auth/login" style={{ color: '#c084fc' }}>Sign in</Link>
+          Already have an account? <a href="/auth/login" style={{ color: '#c084fc', textDecoration: 'none', fontWeight: '500' }}>Sign in</a>
         </div>
 
         {/* Footer */}
@@ -223,7 +333,143 @@ export default function Register() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div style={styles.popupOverlay}>
+          <div style={styles.popupContent}>
+            <button onClick={closePopup} style={styles.popupClose} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(148, 163, 184, 0.2)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(148, 163, 184, 0.1)'}>
+              <X style={{ width: '24px', height: '24px' }} />
+            </button>
+            
+            <div style={styles.successIcon}>
+              <CheckCircle style={{ width: '48px', height: '48px', color: '#22c55e' }} />
+            </div>
+
+            <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#fff', marginBottom: '1rem' }}>
+              Registration Successful! 🎉
+            </h2>
+            
+            <p style={{ color: '#94a3b8', marginBottom: '0.5rem', lineHeight: '1.6', fontSize: '1rem' }}>
+              Thank you for registering,
+            </p>
+            <p style={{ color: '#c084fc', fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+              {formData.fullName}!
+            </p>
+            <p style={{ color: '#cbd5e1', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+              Your account has been created successfully and saved to our database.
+            </p>
+
+            <div style={{ backgroundColor: 'rgba(139,92,246,0.1)', borderRadius: '12px', padding: '1rem', marginBottom: '1.5rem', border: '1px solid rgba(139,92,246,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <div style={{ width: '8px', height: '8px', backgroundColor: '#22c55e', borderRadius: '50%', animation: 'pulse 2s ease-in-out infinite' }}></div>
+                <p style={{ color: '#22c55e', fontSize: '0.875rem', fontWeight: '500' }}>
+                  Saved to MongoDB
+                </p>
+              </div>
+              <p style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>
+                Redirecting to dashboard in 3 seconds...
+              </p>
+            </div>
+
+            <button 
+              onClick={closePopup}
+              style={{
+                width: '100%',
+                padding: '0.875rem',
+                borderRadius: '10px',
+                backgroundColor: '#8b5cf6',
+                color: '#fff',
+                fontWeight: 'bold',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                transition: 'all 0.3s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#7c3aed';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(139, 92, 246, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#8b5cf6';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <span>Go to Dashboard Now</span>
+              <ArrowRight style={{ width: '20px', height: '20px' }} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { 
+          from { transform: rotate(0deg); } 
+          to { transform: rotate(360deg); } 
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes scaleIn {
+          from { 
+            transform: scale(0.8);
+            opacity: 0;
+          }
+          to { 
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { 
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% { 
+            opacity: 0.5;
+            transform: scale(1.2);
+          }
+        }
+        
+        input:focus, select:focus {
+          border-color: #8b5cf6 !important;
+          box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        button:not(:disabled):hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+        }
+        
+        button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        a:hover {
+          text-decoration: underline;
+        }
+      `}</style>
     </div>
   );
 }
